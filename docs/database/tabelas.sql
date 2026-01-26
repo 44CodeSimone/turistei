@@ -95,3 +95,41 @@ CREATE TABLE pedidos_itens (
     valor_total numeric(12,2) NOT NULL,
     created_at timestamptz DEFAULT now()
 );
+
+-- ====================================
+-- Pagamentos dos Pedidos
+-- ====================================
+CREATE TABLE pagamentos_pedido (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    pedido_id uuid NOT NULL REFERENCES pedidos(id) ON DELETE RESTRICT,
+    valor numeric(12,2) NOT NULL,
+    status text NOT NULL,
+    metodo text,
+    pago_em timestamptz,
+    created_at timestamptz DEFAULT now()
+);
+
+-- ====================================
+-- Comissões da Plataforma por Item
+-- ====================================
+CREATE TABLE comissoes_itens (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    pedido_item_id uuid NOT NULL REFERENCES pedidos_itens(id) ON DELETE RESTRICT,
+    prestador_id uuid NOT NULL REFERENCES prestadores(id) ON DELETE RESTRICT,
+    percentual numeric(5,2) NOT NULL,
+    valor numeric(12,2) NOT NULL,
+    created_at timestamptz DEFAULT now()
+);
+
+-- ====================================
+-- Repasses Financeiros por Prestador
+-- ====================================
+CREATE TABLE repasses_prestador (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    pedido_id uuid NOT NULL REFERENCES pedidos(id) ON DELETE RESTRICT,
+    prestador_id uuid NOT NULL REFERENCES prestadores(id) ON DELETE RESTRICT,
+    valor_bruto numeric(12,2) NOT NULL,
+    comissao_plataforma_valor numeric(12,2) NOT NULL,
+    valor_liquido numeric(12,2) NOT NULL,
+    created_at timestamptz DEFAULT now()
+);
