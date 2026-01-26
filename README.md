@@ -1,56 +1,54 @@
 # Turistei
 
-O **Turistei** é uma plataforma de turismo em desenvolvimento, pensada para conectar **prestadores de serviços turísticos** a viajantes, com foco em organização, transparência e sustentabilidade do negócio.
+Turistei is a tourism marketplace platform designed to connect service providers and travelers through a secure, automated and scalable data-driven architecture.
 
-O projeto está em fase de construção progressiva, com a **base de dados e regras críticas já estruturadas**, antes da implementação do aplicativo.
-
----
-
-## Visão do Produto
-
-A plataforma foi idealizada para:
-
-- Organizar a oferta de serviços turísticos
-- Dar autonomia aos prestadores
-- Evitar dependência excessiva de intermediários
-- Garantir controle financeiro e operacional
-- Escalar sem perder governança
-
-Nenhum dado é apagado por padrão.  
-O sistema trabalha com **ativação, suspensão e visibilidade controlada**.
+The project prioritizes strong database governance, financial automation and business rules enforced directly at the PostgreSQL (Supabase) layer before application development.
 
 ---
 
-## Estado Atual do Projeto
+## Product Vision
 
-✅ Banco de dados modelado  
-✅ Segurança por padrão (RLS forçado)  
-✅ Regras de negócio no banco  
-✅ Bloqueio automático por inadimplência  
-✅ Reativação automática por pagamento  
-✅ Pronto para integração com app ou API  
+The platform is built to:
 
-🚧 Frontend ainda não iniciado  
-🚧 Integrações externas em planejamento  
+- Organize tourism services in a structured marketplace
+- Empower service providers with autonomy and control
+- Ensure transparent financial operations
+- Prevent data loss through immutable history
+- Scale without losing governance or security
 
----
-
-## Arquitetura Técnica (Resumo)
-
-- **Banco**: PostgreSQL (Supabase)
-- **Segurança**: Row Level Security (RLS)
-- **Autenticação**: Supabase Auth
-- **Modelo**: Ownership por usuário autenticado
-- **Busca pública**: View somente leitura
-- **Automação**: Triggers, functions e cron
-
-As regras críticas **não dependem do frontend**.
+All critical data follows activation and visibility rules rather than deletions.
 
 ---
 
-## Estrutura de Documentação
+## Current Project Status
 
-A documentação técnica do banco está disponível em:
+✅ Core database fully modeled  
+✅ Financial automation implemented  
+✅ Marketplace multi-provider architecture validated  
+✅ Row Level Security enforced on all tables  
+✅ Automatic payment handling and status updates  
+✅ Production-level data integrity and auditing  
 
-[docs/database/README.md](docs/database/README.md)
+🚧 Frontend not started yet  
+🚧 External integrations planned  
 
+---
+
+## Technical Architecture (Summary)
+
+- Database: PostgreSQL (Supabase)  
+- Security: RLS + FORCE RLS  
+- Authentication: Supabase Auth  
+- Business logic: Database-driven  
+- Public catalog: Read-only search view  
+- Automation: Triggers, RPCs and scheduled jobs  
+
+Critical business rules do not depend on the application layer.
+
+---
+
+## Documentation Structure
+
+Full database architecture and SQL implementation:
+
+docs/database/README.md
