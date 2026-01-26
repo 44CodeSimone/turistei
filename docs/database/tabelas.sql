@@ -40,3 +40,32 @@ CREATE TABLE servicos_midias (
     ordem integer DEFAULT 0,
     created_at timestamptz DEFAULT now()
 );
+
+-- ====================================
+-- Tabela de Planos da Plataforma
+-- ====================================
+CREATE TABLE planos (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    nome text NOT NULL,
+    descricao text,
+    limite_servicos integer,
+    limite_midias integer,
+    permite_video boolean DEFAULT false,
+    destaque boolean DEFAULT false,
+    preco_mensal numeric(12,2) NOT NULL,
+    ativo boolean DEFAULT true,
+    created_at timestamptz DEFAULT now()
+);
+
+-- ====================================
+-- Tabela de Assinaturas dos Prestadores
+-- ====================================
+CREATE TABLE assinaturas (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    prestador_id uuid NOT NULL REFERENCES prestadores(id) ON DELETE RESTRICT,
+    plano_id uuid NOT NULL REFERENCES planos(id) ON DELETE RESTRICT,
+    status text NOT NULL,
+    inicio_em date NOT NULL,
+    fim_em date,
+    created_at timestamptz DEFAULT now()
+);
