@@ -68,3 +68,62 @@
 -- - INSERT: authenticated users can insert only for their services
 -- - UPDATE: authenticated users can update only media for their services
 -- - DELETE: restricted (typically admin/service_role only)
+
+-- =====================================================
+-- MARKETPLACE & FINANCIAL RLS POLICIES
+-- Tables:
+-- - pedidos
+-- - pedidos_itens
+-- - pagamentos_pedido
+-- - comissoes_itens
+-- - repasses_prestador
+-- =====================================================
+
+-- -----------------------------------------------------
+-- pedidos
+-- Ownership: pedidos.turista_id = auth.uid()
+-- -----------------------------------------------------
+-- Policies (conceptual mirror):
+-- - SELECT: tourists can read only their own orders
+-- - INSERT: tourists can create orders only for themselves
+-- - UPDATE: restricted (status changes via secured RPCs)
+-- - DELETE: restricted (financial integrity preserved)
+
+-- -----------------------------------------------------
+-- pedidos_itens
+-- Ownership:
+-- - linked to pedidos of auth.uid() for tourists
+-- - linked to prestadores.user_id for providers
+-- -----------------------------------------------------
+-- Policies (conceptual mirror):
+-- - SELECT: tourists see their items, providers see their own items
+-- - INSERT: via secured order creation flow (RPC)
+-- - UPDATE: restricted
+-- - DELETE: restricted
+
+-- -----------------------------------------------------
+-- pagamentos_pedido
+-- Controlled strictly by backend logic
+-- -----------------------------------------------------
+-- Policies (conceptual mirror):
+-- - SELECT: tourists can read their own payments
+-- - INSERT/UPDATE: backend automation only
+-- - DELETE: restricted
+
+-- -----------------------------------------------------
+-- comissoes_itens
+-- Immutable financial history
+-- -----------------------------------------------------
+-- Policies (conceptual mirror):
+-- - SELECT: providers can read their own commission records
+-- - INSERT: automated only (trigger)
+-- - UPDATE/DELETE: not allowed
+
+-- -----------------------------------------------------
+-- repasses_prestador
+-- Immutable payout records per provider
+-- -----------------------------------------------------
+-- Policies (conceptual mirror):
+-- - SELECT: providers can read only their own payouts
+-- - INSERT: automated only (financial trigger)
+-- - UPDATE/DELETE: not allowed
