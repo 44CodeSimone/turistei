@@ -1,12 +1,11 @@
 -- =====================================================
 -- TURISTEI - CORE DATABASE STRUCTURE
--- PostgreSQL / Supabase
--- Marketplace multi-fornecedor com financeiro automatizado
+-- Marketplace multi-fornecedor (backend em Supabase)
 -- =====================================================
 
--- =========================
--- PRESTADORES
--- =========================
+-- ====================================
+-- Tabela de Prestadores de Serviço
+-- ====================================
 CREATE TABLE prestadores (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id uuid NOT NULL REFERENCES auth.users(id),
@@ -18,9 +17,9 @@ CREATE TABLE prestadores (
     created_at timestamptz DEFAULT now()
 );
 
--- =========================
--- SERVICOS
--- =========================
+-- ====================================
+-- Tabela de Serviços por Prestador
+-- ====================================
 CREATE TABLE servicos (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     prestador_id uuid NOT NULL REFERENCES prestadores(id),
@@ -31,13 +30,13 @@ CREATE TABLE servicos (
     created_at timestamptz DEFAULT now()
 );
 
--- =========================
--- SERVICOS MIDIAS
--- =========================
+-- ====================================
+-- Tabela de Mídias dos Serviços
+-- ====================================
 CREATE TABLE servicos_midias (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     servico_id uuid NOT NULL REFERENCES servicos(id),
     url text NOT NULL,
-    ordem int DEFAULT 0,
+    ordem integer DEFAULT 0,
     created_at timestamptz DEFAULT now()
 );
