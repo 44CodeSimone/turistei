@@ -8,7 +8,7 @@
 -- ====================================
 CREATE TABLE prestadores (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id uuid NOT NULL REFERENCES auth.users(id),
+    user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE RESTRICT,
     nome text NOT NULL,
     email text,
     telefone text,
@@ -22,7 +22,7 @@ CREATE TABLE prestadores (
 -- ====================================
 CREATE TABLE servicos (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    prestador_id uuid NOT NULL REFERENCES prestadores(id),
+    prestador_id uuid NOT NULL REFERENCES prestadores(id) ON DELETE RESTRICT,
     titulo text NOT NULL,
     descricao text,
     preco numeric(12,2) NOT NULL,
@@ -35,7 +35,7 @@ CREATE TABLE servicos (
 -- ====================================
 CREATE TABLE servicos_midias (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    servico_id uuid NOT NULL REFERENCES servicos(id),
+    servico_id uuid NOT NULL REFERENCES servicos(id) ON DELETE RESTRICT,
     url text NOT NULL,
     ordem integer DEFAULT 0,
     created_at timestamptz DEFAULT now()
