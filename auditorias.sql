@@ -1,0 +1,49 @@
+-- =====================================================
+-- TURISTEI - SECURITY & INTEGRITY AUDITS (DOCUMENTATION)
+-- This file mirrors the production audit routines that validate
+-- database hardening and financial integrity.
+-- =====================================================
+
+-- =====================================================
+-- Security audit
+-- =====================================================
+-- Function: admin_auditoria_seguranca_json()
+-- Output:
+-- {
+--   "PASS": true,
+--   "details": {
+--     "rls_forced": true,
+--     "no_public_grants": true,
+--     "no_public_execute": true,
+--     "secure_search_path": true,
+--     "indexes_ok": true,
+--     "fk_integrity_ok": true
+--   }
+-- }
+--
+-- Purpose:
+-- - Ensure all tables have RLS + FORCE enabled
+-- - Verify no GRANT exists for anon/authenticated
+-- - Verify no EXECUTE exists for PUBLIC
+-- - Confirm hardened default privileges
+-- - Validate FK indexes and financial protections
+
+-- =====================================================
+-- Financial integrity audit
+-- =====================================================
+-- Checks:
+-- - No deletions allowed in financial history tables
+-- - ON DELETE RESTRICT enforced on:
+--     pedidos
+--     pedidos_itens
+--     pagamentos_pedido
+--     comissoes_itens
+--     repasses_prestador
+-- - Historical payout consistency
+
+-- =====================================================
+-- Performance audit
+-- =====================================================
+-- Validates:
+-- - FK support indexes exist
+-- - Critical query paths are optimized
