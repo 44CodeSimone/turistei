@@ -6,6 +6,18 @@ The project prioritizes strong database governance, financial automation and bus
 
 ---
 
+## Quick Links
+
+- 📘 Architecture: [docs/arquitetura.md](docs/arquitetura.md)
+- 🗄 Database Overview: [docs/database/README.md](docs/database/README.md)
+- 🧱 Tables (schema): [docs/database/tabelas.sql](docs/database/tabelas.sql)
+- 🔐 RLS (security policies): [docs/database/rls.sql](docs/database/rls.sql)
+- 🧩 Functions & RPCs: [docs/database/funcoes.sql](docs/database/funcoes.sql)
+- ⚙ Triggers & Automations: [docs/database/triggers.sql](docs/database/triggers.sql)
+- ✅ Audits (PASS checks): [docs/database/auditorias.sql](docs/database/auditorias.sql)
+
+---
+
 ## Product Vision
 
 The platform is built to:
@@ -23,11 +35,10 @@ All critical data follows activation and visibility rules rather than deletions.
 ## Current Project Status
 
 ✅ Core database fully modeled  
-✅ Financial automation implemented  
 ✅ Marketplace multi-provider architecture validated  
-✅ Row Level Security enforced on all tables  
-✅ Automatic payment handling and status updates  
-✅ Production-level data integrity and auditing  
+✅ Financial automation structure documented  
+✅ Row Level Security documented (RLS + FORCE RLS)  
+✅ Database-driven business rules
 
 🚧 Frontend not started yet  
 🚧 External integrations planned  
@@ -44,11 +55,3 @@ All critical data follows activation and visibility rules rather than deletions.
 - Automation: Triggers, RPCs and scheduled jobs  
 
 Critical business rules do not depend on the application layer.
-
----
-
-## Documentation Structure
-
-Full database architecture and SQL implementation:
-
-docs/database/README.md
