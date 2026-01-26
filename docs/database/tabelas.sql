@@ -69,3 +69,29 @@ CREATE TABLE assinaturas (
     fim_em date,
     created_at timestamptz DEFAULT now()
 );
+
+-- ====================================
+-- Tabela de Pedidos (cabeçalho)
+-- ====================================
+CREATE TABLE pedidos (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    turista_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE RESTRICT,
+    valor_bruto numeric(12,2) NOT NULL DEFAULT 0,
+    valor_final numeric(12,2) NOT NULL DEFAULT 0,
+    status text NOT NULL,
+    created_at timestamptz DEFAULT now()
+);
+
+-- ====================================
+-- Tabela de Itens do Pedido (por prestador)
+-- ====================================
+CREATE TABLE pedidos_itens (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    pedido_id uuid NOT NULL REFERENCES pedidos(id) ON DELETE RESTRICT,
+    prestador_id uuid NOT NULL REFERENCES prestadores(id) ON DELETE RESTRICT,
+    servico_id uuid NOT NULL REFERENCES servicos(id) ON DELETE RESTRICT,
+    quantidade integer NOT NULL DEFAULT 1,
+    preco_unitario numeric(12,2) NOT NULL,
+    valor_total numeric(12,2) NOT NULL,
+    created_at timestamptz DEFAULT now()
+);
