@@ -1,0 +1,48 @@
+-- =====================================================
+-- TURISTEI - TRIGGERS & AUTOMATIONS (DOCUMENTATION)
+-- This file mirrors the production automation logic used in Supabase.
+-- =====================================================
+
+-- =====================================================
+-- Financial automation: payment -> commissions -> payouts
+-- =====================================================
+-- Trigger: pagamentos_pedido_on_pago
+-- Event: AFTER UPDATE on pagamentos_pedido
+-- Condition: status changes to 'pago' (or equivalent)
+-- Action:
+-- - Generate per-item commission records (comissoes_itens)
+--   using prestadores.comissao_override_percent when present,
+--   otherwise config_plataforma.comissao_default_percent
+-- - Generate payout summaries per provider (repasses_prestador)
+--   using immutable values:
+--     valor_bruto
+--     comissao_plataforma_valor
+--     valor_liquido
+-- - Keep financial history immutable (no deletes)
+
+-- =====================================================
+-- Subscription automation: overdue -> suspension -> reactivation
+-- =====================================================
+-- Scheduled job (cron): subscription delinquency check
+-- Action:
+-- - Detect overdue providers (assinaturas / pagamentos_assinatura)
+-- - Suspend access according to platform rules (no data deletion)
+
+-- Trigger: subscription reactivation on payment
+-- Event: AFTER INSERT/UPDATE on pagamentos_assinatura
+-- Condition: payment marked as paid
+-- Action:
+-- - Reactivate provider subscription
+-- - Restore access/visibility according to plan rules
+
+-- =====================================================
+-- Security hardening automation (critical)
+-- =====================================================
+-- Event Trigger: automatic EXECUTE hardening on function create/alter
+-- Action:
+-- - Revoke EXECUTE from PUBLIC/anon/authenticated
+-- - Apply rule:
+--     admin_* => GRANT EXECUTE to service_role only
+--     app_* / meu_* => GRANT EXECUTE to authenticated only
+--     others => closed by default
+-- - Neutralize dangerous default privileges from Supabase
