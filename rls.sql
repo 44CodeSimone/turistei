@@ -17,3 +17,54 @@
 -- Detailed policies are intentionally maintained in the database (production).
 -- This repository mirrors the rules for traceability and auditing.
 -- =====================================================
+
+-- =====================================================
+-- CORE OWNERSHIP POLICIES
+-- Tables:
+-- - prestadores
+-- - servicos
+-- - servicos_midias
+-- =====================================================
+
+-- -----------------------------------------------------
+-- prestadores
+-- Ownership: prestadores.user_id = auth.uid()
+-- -----------------------------------------------------
+-- Expected in production:
+--   ALTER TABLE public.prestadores ENABLE ROW LEVEL SECURITY;
+--   ALTER TABLE public.prestadores FORCE ROW LEVEL SECURITY;
+--
+-- Policies (conceptual mirror):
+-- - SELECT: authenticated users can read only their own provider record
+-- - INSERT: authenticated users can create only with user_id = auth.uid()
+-- - UPDATE: authenticated users can update only their own provider record
+-- - DELETE: restricted (typically admin/service_role only)
+
+-- -----------------------------------------------------
+-- servicos
+-- Ownership: servicos.prestador_id belongs to prestadores.user_id = auth.uid()
+-- -----------------------------------------------------
+-- Expected in production:
+--   ALTER TABLE public.servicos ENABLE ROW LEVEL SECURITY;
+--   ALTER TABLE public.servicos FORCE ROW LEVEL SECURITY;
+--
+-- Policies (conceptual mirror):
+-- - SELECT: authenticated users can read only services of their provider
+-- - INSERT: authenticated users can insert only for their provider
+-- - UPDATE: authenticated users can update only services of their provider
+-- - DELETE: restricted (typically admin/service_role only)
+
+-- -----------------------------------------------------
+-- servicos_midias
+-- Ownership: servicos_midias.servico_id belongs to servicos.prestador_id
+--          which belongs to prestadores.user_id = auth.uid()
+-- -----------------------------------------------------
+-- Expected in production:
+--   ALTER TABLE public.servicos_midias ENABLE ROW LEVEL SECURITY;
+--   ALTER TABLE public.servicos_midias FORCE ROW LEVEL SECURITY;
+--
+-- Policies (conceptual mirror):
+-- - SELECT: authenticated users can read only media for their services
+-- - INSERT: authenticated users can insert only for their services
+-- - UPDATE: authenticated users can update only media for their services
+-- - DELETE: restricted (typically admin/service_role only)
