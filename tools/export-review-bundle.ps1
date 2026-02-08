@@ -2,6 +2,7 @@
 # TURISTEI - REVIEW BUNDLE EXPORT (PowerShell)
 # Generates: ./review_bundle_<timestamp>.zip
 # Safe by default: excludes .env, node_modules, pedido.json, backups
+# Also prunes old bundles (keep N, default = 1)
 # ==========================================
 
 $ErrorActionPreference = "Stop"
@@ -48,7 +49,6 @@ New-Item -ItemType Directory -Path $outDir -Force | Out-Null
 "npm  $(npm -v)"  | Out-File -FilePath (Join-Path $outDir "meta_versions.txt") -Append -Encoding utf8
 
 # 2) META: basic tree (safe)
-# PowerShell doesn't have native tree formatting like linux; we create a simple listing.
 Get-ChildItem -Path $root -Recurse -File |
   Where-Object {
     $p = $_.FullName.Substring($root.Length).TrimStart("\")
@@ -90,10 +90,13 @@ function Copy-FolderSafe($folder) {
   $files = Get-ChildItem -Path $src -Recurse -File
   foreach ($file in $files) {
     $rel = $file.FullName.Substring($root.Length).TrimStart("\")
+    $skip = $false
 
-    foreach ($d in $excludeDirs) { if ($rel -like "$d\*") { continue } }
-    foreach ($f in $excludeFiles) { if ($file.Name -ieq $f) { continue } }
-    if ($file.Name -like "pedido.backup.*.json") { continue }
+    foreach ($d in $excludeDirs) { if ($rel -like "$d\*") { $skip = $true } }
+    foreach ($f in $excludeFiles) { if ($file.Name -ieq $f) { $skip = $true } }
+    if ($file.Name -like "pedido.backup.*.json") { $skip = $true }
+
+    if ($skip) { continue }
 
     $dest = Join-Path $outDir $rel
     $destDir = Split-Path $dest -Parent
@@ -106,6 +109,7 @@ function Copy-FolderSafe($folder) {
 
 Copy-FolderSafe "src"
 Copy-FolderSafe "tools"
+Copy-FolderSafe "docs"
 
 # 4) Run tests and save output (best-effort)
 function Run-And-Capture($cmd, $outFile) {
@@ -120,6 +124,7 @@ function Run-And-Capture($cmd, $outFile) {
   }
 }
 
+# Usa seus atalhos do profile quando existirem
 Run-And-Capture "to2" "test_to2_output.txt"
 Run-And-Capture "tap" "test_tap_output.txt"
 
@@ -131,3 +136,42 @@ Compress-Archive -Path $outDir\* -DestinationPath $zipPath -Force
 Write-Host ""
 Write-Host "DONE ✅ Bundle created:" -ForegroundColor Green
 Write-Host $zipPath -ForegroundColor Gray
+
+# ─────────────────────────────────────────────────────────────
+# Turistei: manter apenas os últimos N review bundles (dirs+zips)
+# Default: 1
+# Config opcional: $env:TURISTEI_REVIEW_BUNDLE_KEEP = "1"
+# ─────────────────────────────────────────────────────────────
+try {
+  $keepCount = 1
+  if ($env:TURISTEI_REVIEW_BUNDLE_KEEP) {
+    $n = [int]$env:TURISTEI_REVIEW_BUNDLE_KEEP
+    if ($n -gt 0) { $keepCount = $n }
+  }
+
+  # Pastas review_bundle_*
+  $bundleDirs = Get-ChildItem -Directory -Filter "review_bundle_*" |
+    Sort-Object Name -Descending
+
+  if ($bundleDirs.Count -gt $keepCount) {
+    $toDeleteDirs = $bundleDirs | Select-Object -Skip $keepCount
+    foreach ($d in $toDeleteDirs) {
+      Remove-Item -Recurse -Force $d.FullName
+    }
+  }
+
+  # Zips review_bundle_*.zip
+  $bundleZips = Get-ChildItem -File -Filter "review_bundle_*.zip" |
+    Sort-Object Name -Descending
+
+  if ($bundleZips.Count -gt $keepCount) {
+    $toDeleteZips = $bundleZips | Select-Object -Skip $keepCount
+    foreach ($z in $toDeleteZips) {
+      Remove-Item -Force $z.FullName
+    }
+  }
+
+  Write-Host "[Turistei] Review bundles: mantendo $keepCount (dirs+zips), antigos removidos." -ForegroundColor Green
+} catch {
+  Write-Host "[Turistei] Aviso: falha ao limpar review bundles antigos (não é crítico)." -ForegroundColor Yellow
+}

@@ -26,6 +26,24 @@ function dbg(message, meta) {
   }
 }
 
+// Observabilidade do repositório (desligado por padrão):
+// Ative com TURISTEI_REPO_DEBUG=1
+const REPO_DEBUG = (() => {
+  const v = String(process.env.TURISTEI_REPO_DEBUG || '').trim().toLowerCase();
+  return v === '1' || v === 'true' || v === 'yes' || v === 'on';
+})();
+
+function rdbg(message, meta) {
+  if (!REPO_DEBUG) return;
+  try {
+    const base = `[turistei][repo] ${message}`;
+    if (meta !== undefined) console.log(base, meta);
+    else console.log(base);
+  } catch {
+    // nunca quebrar fluxo por log
+  }
+}
+
 // Quantos backups manter (default 30). Pode sobrescrever via env:
 // TURISTEI_BACKUP_KEEP=30
 const BACKUP_KEEP = (() => {
@@ -486,19 +504,33 @@ function normalizeOrder(order) {
 }
 
 function loadDb() {
-  if (!fs.existsSync(DATA_FILE)) return { orders: [] };
+  if (!fs.existsSync(DATA_FILE)) {
+    rdbg('loadDb: data file not found', { file: DATA_FILE });
+    return { orders: [] };
+  }
 
   const raw = fs.readFileSync(DATA_FILE, 'utf-8').trim();
-  if (!raw) return { orders: [] };
+  if (!raw) {
+    rdbg('loadDb: empty file', { file: DATA_FILE });
+    return { orders: [] };
+  }
 
   try {
     const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) return { orders: parsed };
-    if (parsed && typeof parsed === 'object' && Array.isArray(parsed.orders)) return parsed;
+    if (Array.isArray(parsed)) {
+      rdbg('loadDb: parsed array (legacy)', { count: parsed.length });
+      return { orders: parsed };
+    }
+    if (parsed && typeof parsed === 'object' && Array.isArray(parsed.orders)) {
+      rdbg('loadDb: parsed object', { count: parsed.orders.length });
+      return parsed;
+    }
 
+    rdbg('loadDb: invalid structure -> backup', { file: DATA_FILE });
     backupDb('invalid-structure');
     return { orders: [] };
   } catch {
+    rdbg('loadDb: invalid json -> backup', { file: DATA_FILE });
     backupDb('invalid-json');
     return { orders: [] };
   }
@@ -506,6 +538,7 @@ function loadDb() {
 
 function saveDb(db, reason = 'save') {
   const safeDb = { orders: Array.isArray(db && db.orders) ? db.orders : [] };
+  rdbg('saveDb', { reason, ordersCount: safeDb.orders.length });
   backupDb(reason);
   fs.writeFileSync(DATA_FILE, JSON.stringify(safeDb, null, 2), 'utf-8');
 }
@@ -546,12 +579,29 @@ function readAllOrders(opts = undefined) {
     orders.length !== normalized.length ||
     orders.some((o, idx) => JSON.stringify(o) !== JSON.stringify(normalized[idx]));
 
-  if (changed) saveDb({ orders: normalized }, 'normalized-on-read');
+  if (changed) {
+    rdbg('readAllOrders: normalized-on-read', { before: orders.length, after: normalized.length });
+    saveDb({ orders: normalized }, 'normalized-on-read');
+  }
 
-  if (!user) return [];
-  if (isAdmin(user)) return normalized;
+  if (!user) {
+    rdbg('readAllOrders: no user -> []');
+    return [];
+  }
 
-  return normalized.filter((o) => isOwnedByUser(o, user));
+  const admin = isAdmin(user);
+  if (admin) {
+    rdbg('readAllOrders: admin -> all', { userId: getUserId(user), count: normalized.length });
+    return normalized;
+  }
+
+  const filtered = normalized.filter((o) => isOwnedByUser(o, user));
+  rdbg('readAllOrders: user -> filtered', {
+    userId: getUserId(user),
+    total: normalized.length,
+    returned: filtered.length,
+  });
+  return filtered;
 }
 
 function findOrderById(arg) {
@@ -565,10 +615,16 @@ function findOrderById(arg) {
   const user =
     arg && typeof arg === 'object' && arg.user && typeof arg.user === 'object' ? arg.user : null;
 
-  if (!id || !user) return null;
+  if (!id || !user) {
+    rdbg('findOrderById: missing id/user', { hasId: !!id, hasUser: !!user });
+    return null;
+  }
 
   const orders = readAllOrders({ user });
-  return orders.find((o) => o.id === id) || null;
+  const found = orders.find((o) => o.id === id) || null;
+
+  rdbg('findOrderById', { id, userId: getUserId(user), found: !!found });
+  return found;
 }
 
 function insertOrder(order) {
@@ -578,6 +634,7 @@ function insertOrder(order) {
   const normalized = normalizeOrder(order);
   orders.push(normalized);
 
+  rdbg('insertOrder', { id: normalized.id, ordersCount: orders.length });
   saveDb({ orders }, 'insert');
   return normalized;
 }
@@ -598,11 +655,15 @@ function updateOrderById({ id, order, user } = {}) {
   const orders = asArray(db.orders).map(normalizeOrder);
 
   const idx = orders.findIndex((o) => o && o.id === id);
-  if (idx < 0) return null;
+  if (idx < 0) {
+    rdbg('updateOrderById: not found', { id, userId: getUserId(user) });
+    return null;
+  }
 
   const current = orders[idx];
 
   if (!isAdmin(user) && !isOwnedByUser(current, user)) {
+    rdbg('updateOrderById: forbidden by ownership', { id, userId: getUserId(user) });
     return null;
   }
 
@@ -615,6 +676,7 @@ function updateOrderById({ id, order, user } = {}) {
   const normalized = normalizeOrder(merged);
   orders[idx] = normalized;
 
+  rdbg('updateOrderById: updated', { id, userId: getUserId(user) });
   saveDb({ orders }, 'update');
   return normalized;
 }
