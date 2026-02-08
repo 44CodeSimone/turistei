@@ -1,0 +1,57 @@
+﻿{
+  "id": "ord_1770167509611",
+  "customer": {
+    "id": "u_simone_1",
+    "email": "simone@turistei.com"
+  },
+  "status": "CREATED",
+  "history": [
+    {
+      "at": "2026-02-04T01:11:49.611Z",
+      "type": "ORDER_CREATED",
+      "message": "Pedido criado"
+    }
+  ],
+  "createdAt": "2026-02-04T01:11:49.611Z",
+  "updatedAt": "2026-02-04T01:11:49.611Z",
+  "items": [
+    {
+      "serviceId": 1,
+      "providerId": 1,
+      "name": "Passeio de barco",
+      "unitPrice": 150,
+      "quantity": 1,
+      "total": 150,
+      "platform": {
+        "commissionPercent": 15,
+        "commissionValue": 22.5
+      },
+      "provider": {
+        "netValue": 127.5
+      }
+    }
+  ],
+  "totals": {
+    "gross": 150,
+    "final": 150
+  },
+  "providers": [
+    {
+      "providerId": 1,
+      "subtotal": 150
+    }
+  ],
+  "financial": {
+    "platformCommissionPercent": 15,
+    "platformCommissionTotal": 22.5,
+    "providerPayouts": [
+      {
+        "providerId": 1,
+        "gross": 150,
+        "platformCommissionValue": 22.5,
+        "net": 127.5
+      }
+    ],
+    "generatedAt": "2026-02-04T01:11:49.624Z"
+  }
+}

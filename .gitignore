@@ -1,0 +1,16 @@
+﻿# dependências
+node_modules/
+
+# variáveis de ambiente
+.env
+
+# dados locais
+pedido.json
+backups/
+
+# artefatos temporários
+review_bundle_*/
+review_bundle_*.zip
+
+# logs
+*.log

@@ -1,0 +1,602 @@
+﻿openapi: 3.0.3
+info:
+  title: Turistei API
+  version: 1.0.0
+  license:
+    name: Proprietary
+  description: >
+    Turistei API (Big Tech Real)  marketplace de turismo multi-fornecedor.
+    Regras imutáveis: comissão por item, repasses separados por prestador, histórico auditável.
+
+servers:
+  - url: http://localhost:3000
+    description: Local (dev)
+
+tags:
+  - name: Meta
+    description: Endpoints básicos da API (root)
+  - name: Health
+    description: Health check da API
+  - name: Auth
+    description: Autenticação e identidade do usuário (JWT)
+  - name: Catalog
+    description: Catálogo (serviços e prestadores)
+  - name: Orders
+    description: Pedidos (ownership + lifecycle guard)
+
+security:
+  - bearerAuth: []
+
+paths:
+  /:
+    get:
+      tags: [Meta]
+      operationId: root
+      summary: Root endpoint
+      security: []
+      responses:
+        "200":
+          description: OK
+          headers:
+            x-request-id:
+              $ref: "#/components/headers/RequestId"
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: API Turistei online
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /health:
+    get:
+      tags: [Health]
+      operationId: healthCheck
+      summary: Health check
+      security: []
+      responses:
+        "200":
+          description: OK
+          headers:
+            x-request-id:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: ok }
+                  api: { type: string, example: turistei }
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      operationId: authLogin
+      summary: Login (JWT)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login OK
+          headers:
+            x-request-id:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      operationId: authMe
+      summary: Current user
+      responses:
+        "200":
+          description: OK
+          headers:
+            x-request-id:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /services:
+    get:
+      tags: [Catalog]
+      operationId: listServices
+      summary: List services
+      responses:
+        "200":
+          description: OK
+          headers:
+            x-request-id:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Service"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /providers:
+    get:
+      tags: [Catalog]
+      operationId: listProviders
+      summary: List providers
+      responses:
+        "200":
+          description: OK
+          headers:
+            x-request-id:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Provider"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /providers/{id}/services:
+    get:
+      tags: [Catalog]
+      operationId: listProviderServices
+      summary: List services by provider
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          headers:
+            x-request-id:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Service"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /orders:
+    get:
+      tags: [Orders]
+      operationId: listOrders
+      summary: List orders (ownership enforced; admin can see all)
+      responses:
+        "200":
+          description: OK
+          headers:
+            x-request-id:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Order"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+    post:
+      tags: [Orders]
+      operationId: createOrder
+      summary: Create order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOrderRequest"
+      responses:
+        "201":
+          description: Created
+          headers:
+            x-request-id:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /orders/{id}:
+    get:
+      tags: [Orders]
+      operationId: getOrderById
+      summary: Get order by id (ownership enforced)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          headers:
+            x-request-id:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /orders/{id}/pay:
+    post:
+      tags: [Orders]
+      operationId: payOrder
+      summary: Move order to PAID (lifecycle guard)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          headers:
+            x-request-id:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /orders/{id}/confirm:
+    post:
+      tags: [Orders]
+      operationId: confirmOrder
+      summary: Move order to CONFIRMED (lifecycle guard)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          headers:
+            x-request-id:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /orders/{id}/complete:
+    post:
+      tags: [Orders]
+      operationId: completeOrder
+      summary: Move order to COMPLETED (lifecycle guard)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          headers:
+            x-request-id:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /orders/{id}/cancel:
+    post:
+      tags: [Orders]
+      operationId: cancelOrder
+      summary: Cancel order (lifecycle guard)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  example: Cliente desistiu
+      responses:
+        "200":
+          description: OK
+          headers:
+            x-request-id:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  headers:
+    RequestId:
+      description: Request correlation id (also returned in error bodies when applicable).
+      schema:
+        type: string
+        example: req_1700000000000_ab12cd
+
+  responses:
+    BadRequest:
+      description: Bad Request
+      headers:
+        x-request-id:
+          $ref: "#/components/headers/RequestId"
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorResponse" }
+          examples:
+            badRequest:
+              value: { error: "bad_request", message: "Invalid input", requestId: "req_1700000000000_ab12cd" }
+
+    Unauthorized:
+      description: Unauthorized
+      headers:
+        x-request-id:
+          $ref: "#/components/headers/RequestId"
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorResponse" }
+          examples:
+            unauthorized:
+              value: { error: "unauthorized", message: "Missing/invalid token", requestId: "req_1700000000000_ab12cd" }
+
+    NotFound:
+      description: Not Found
+      headers:
+        x-request-id:
+          $ref: "#/components/headers/RequestId"
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorResponse" }
+          examples:
+            notFound:
+              value: { error: "not_found", message: "Resource not found", requestId: "req_1700000000000_ab12cd" }
+
+    InternalError:
+      description: Internal Server Error
+      headers:
+        x-request-id:
+          $ref: "#/components/headers/RequestId"
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorResponse" }
+          examples:
+            internal:
+              value: { error: "internal_server_error", message: "Erro interno no servidor.", requestId: "req_1700000000000_ab12cd" }
+
+  schemas:
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, example: simone@turistei.com }
+        password: { type: string, example: "123456" }
+
+    LoginResponse:
+      type: object
+      required: [token]
+      properties:
+        token:
+          type: string
+          description: JWT token
+
+    MeResponse:
+      type: object
+      properties:
+        user:
+          type: object
+          properties:
+            id: { type: string, example: u_simone_1 }
+            email: { type: string, example: simone@turistei.com }
+            role: { type: string, example: admin }
+
+    Provider:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        name: { type: string, example: Fornecedor 1 }
+
+    Service:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        providerId: { type: integer, example: 1 }
+        name: { type: string, example: Passeio de barco }
+        price: { type: number, example: 150 }
+
+    CreateOrderRequest:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [serviceId, quantity]
+            properties:
+              serviceId: { type: integer, example: 1 }
+              quantity: { type: integer, minimum: 1, example: 1 }
+
+    OrderCustomer:
+      type: object
+      properties:
+        id: { type: string, example: u_simone_1 }
+        email: { type: string, example: simone@turistei.com }
+
+    OrderEvent:
+      type: object
+      properties:
+        at: { type: string, format: date-time }
+        type: { type: string, example: ORDER_CREATED }
+        message: { type: string, example: Pedido criado }
+
+    OrderItem:
+      type: object
+      properties:
+        serviceId: { type: integer, example: 1 }
+        providerId: { type: integer, example: 1 }
+        name: { type: string, example: Passeio de barco }
+        unitPrice: { type: number, example: 150 }
+        quantity: { type: integer, example: 1 }
+        total: { type: number, example: 150 }
+        platform:
+          type: object
+          properties:
+            commissionPercent: { type: number, example: 15 }
+            commissionValue: { type: number, example: 22.5 }
+        provider:
+          type: object
+          properties:
+            netValue: { type: number, example: 127.5 }
+
+    OrderTotals:
+      type: object
+      properties:
+        gross: { type: number, example: 150 }
+        final: { type: number, example: 150 }
+
+    ProviderSubtotal:
+      type: object
+      properties:
+        providerId: { type: integer, example: 1 }
+        subtotal: { type: number, example: 150 }
+
+    FinancialProviderPayout:
+      type: object
+      properties:
+        providerId: { type: integer, example: 1 }
+        gross: { type: number, example: 150 }
+        platformCommissionValue: { type: number, example: 22.5 }
+        net: { type: number, example: 127.5 }
+
+    OrderFinancial:
+      type: object
+      properties:
+        platformCommissionPercent: { type: number, example: 15 }
+        platformCommissionTotal: { type: number, example: 22.5 }
+        providerPayouts:
+          type: array
+          items: { $ref: "#/components/schemas/FinancialProviderPayout" }
+        generatedAt: { type: string, format: date-time }
+
+    Order:
+      type: object
+      properties:
+        id: { type: string, example: ord_1770415433874 }
+        customer: { $ref: "#/components/schemas/OrderCustomer" }
+        status:
+          type: string
+          example: CREATED
+          description: Order status (lifecycle guarded)
+        history:
+          type: array
+          items: { $ref: "#/components/schemas/OrderEvent" }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/OrderItem" }
+        totals: { $ref: "#/components/schemas/OrderTotals" }
+        providers:
+          type: array
+          items: { $ref: "#/components/schemas/ProviderSubtotal" }
+        financial: { $ref: "#/components/schemas/OrderFinancial" }
+
+    ErrorResponse:
+      type: object
+      properties:
+        error: { type: string, example: internal_server_error }
+        message: { type: string, example: Erro interno no servidor. }
+        requestId: { type: string, example: req_1700000000000_ab12cd }
