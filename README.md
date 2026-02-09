@@ -1,65 +1,103 @@
-﻿# Turistei API (Big Tech Real)
+﻿# Turistei API
 
-API local do projeto **Turistei** (marketplace de turismo multi-fornecedor), com:
-- pedidos multi-fornecedor reais
-- comissão por item
-- repasses separados por prestador
-- histórico de eventos
-- autenticação JWT hardened
-- ownership (isolamento por usuário) validado
-- lifecycle do pedido com guard (transições inválidas bloqueadas)
+API backend do projeto **Turistei**, um marketplace de turismo multi-fornecedor,
+desenvolvido com foco em arquitetura limpa, segurança e regras de negócio reais.
 
-## Arquitetura obrigatória (camadas)
-routes  controllers  services  repositories  storage
+---
+
+## 📌 Status do Projeto
+
+✅ API estável  
+✅ Ciclo de vida de pedidos completo  
+✅ Controle de ownership (usuário x admin)  
+✅ Testes automatizados passando  
+✅ Persistência desacoplada (file repository)  
+
+---
+
+## 🏗️ Arquitetura
+
+Arquitetura em camadas, seguindo padrão enterprise:
+
+```
+routes → controllers → services → repositories → storage
+```
 
 Regras:
-- nunca pular camada
-- nenhuma lógica fora do lugar
-- mudanças mínimas
-- se está funcionando e testado: NÃO MEXER
+- nenhuma lógica fora da camada correta
+- services não conhecem HTTP
+- repositories isolam persistência
+- fácil troca futura para banco real (ex: Supabase)
 
-## Requisitos
-- Node.js
-- NPM
+---
 
-## Configuração (.env)
-JWT_SECRET=SEU_SEGREDO_FORTE_AQUI  
-TURISTEI_PLATFORM_COMMISSION_PERCENT=15
+## 🔐 Autenticação
 
-## Rodar API
-npm start  
-npm run start:dev
+- JWT (JSON Web Token)
+- Middleware `requireAuth`
+- Perfis suportados:
+  - admin
+  - user comum
 
-Base URL: http://localhost:3000
+---
 
-## Rotas principais
-/health  
-/auth/login  
-/auth/me  
+## 📦 Funcionalidades Implementadas
 
-/services  
-/providers  
-/providers/:id/services  
+### Pedidos (Orders)
+- Criar pedido
+- Listar pedidos
+- Buscar pedido por ID
+- Ciclo de vida completo:
+  - CREATED
+  - PAID
+  - CONFIRMED
+  - COMPLETED
+  - CANCELLED
+- Validação de transições inválidas (HTTP 409)
 
-/orders (POST, GET)  
-/orders/:id (GET)
+### Ownership
+- Usuário vê apenas seus pedidos
+- Admin vê todos os pedidos
 
-/orders/:id/pay  
-/orders/:id/confirm  
-/orders/:id/complete  
-/orders/:id/cancel  
+---
 
-## Testes Big Tech (1 comando)
+## 🧪 Testes Automatizados
+
+Executar todos os testes:
+
+```bash
 npm run test:all
+```
 
-Inclui:
-- API
+Testes incluídos:
+- API básica
 - Ownership
-- Lifecycle
+- Lifecycle de pedidos
+- Transições inválidas
 
-## Dados
-pedido.json  ativo  
-backups/  histórico seguro  
+---
 
-## Status
-API estável, segura, auditada e validada
+## ▶️ Executar o Projeto
+
+### Instalar dependências
+```bash
+npm install
+```
+
+### Rodar API
+```bash
+npm start
+```
+
+API disponível em:
+```
+http://localhost:3000
+```
+
+---
+
+## 🗂️ Observações
+
+- Persistência atual em `pedido.json`
+- Estrutura preparada para evolução futura
+- Projeto em fase de backend consolidado
