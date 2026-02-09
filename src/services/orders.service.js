@@ -54,6 +54,28 @@ function getPlatformCommissionPercent() {
   return percent;
 }
 
+// Observabilidade mínima (desligada por padrão)
+// Ativa se TURISTEI_OBS=1 ou TURISTEI_LOG_LEVEL=debug
+function obsEnabled() {
+  const obs = String(process.env.TURISTEI_OBS || '').trim();
+  if (obs === '1' || obs.toLowerCase() === 'true') return true;
+
+  const level = String(process.env.TURISTEI_LOG_LEVEL || '').trim().toLowerCase();
+  if (level === 'debug') return true;
+
+  return false;
+}
+
+function obs(event, meta) {
+  if (!obsEnabled()) return;
+  const safeMeta = meta && typeof meta === 'object' ? meta : undefined;
+  if (safeMeta) {
+    console.log(`[turistei][orders.service] ${event}`, safeMeta);
+    return;
+  }
+  console.log(`[turistei][orders.service] ${event}`);
+}
+
 function requireUser(user) {
   if (!user || typeof user !== 'object') {
     const err = new Error('Unauthorized');
@@ -136,6 +158,12 @@ function persistOrderUpdate(updatedOrder, { user } = {}) {
 function transitionOrderStatus({ id, toStatus, user, eventType, eventMessage } = {}) {
   requireUser(user);
 
+  obs('transition.start', {
+    orderId: id,
+    toStatus: normalizeStatusInput(toStatus),
+    actorUserId: String(user.id),
+  });
+
   const order = ordersRepository.findOrderById({ id, user });
   if (!order) notFoundOrder(id);
 
@@ -144,6 +172,7 @@ function transitionOrderStatus({ id, toStatus, user, eventType, eventMessage } =
 
   const allowed = ORDER_TRANSITIONS[from] || [];
   if (!allowed.includes(to)) {
+    obs('transition.denied', { orderId: id, fromStatus: from, toStatus: to });
     invalidTransition(from, to);
   }
 
@@ -160,11 +189,23 @@ function transitionOrderStatus({ id, toStatus, user, eventType, eventMessage } =
     }),
   };
 
-  return persistOrderUpdate(updatedOrder, { user });
+  obs('transition.persist', { orderId: id, fromStatus: from, toStatus: to });
+
+  const persisted = persistOrderUpdate(updatedOrder, { user });
+
+  obs('transition.end', { orderId: id, status: to });
+
+  return persisted;
 }
 
 function createOrder(payload, { user } = {}) {
   requireUser(user);
+
+  obs('create.start', {
+    actorUserId: String(user.id),
+    hasItems: Array.isArray(payload && payload.items),
+    itemsCount: Array.isArray(payload && payload.items) ? payload.items.length : 0,
+  });
 
   const services = servicesService.listServices();
 
@@ -198,6 +239,7 @@ function createOrder(payload, { user } = {}) {
     .filter(Boolean);
 
   if (acceptedItems.length === 0) {
+    obs('create.rejected', { actorUserId: String(user.id), reason: 'NO_VALID_ITEMS' });
     const err = new Error('Nenhum item válido encontrado.');
     err.status = 400;
     err.code = 'NO_VALID_ITEMS';
@@ -284,6 +326,15 @@ function createOrder(payload, { user } = {}) {
     createdAt,
     updatedAt: createdAt,
   };
+
+  obs('create.end', {
+    actorUserId: String(user.id),
+    orderId: order.id,
+    acceptedItems: acceptedItems.length,
+    providersCount: providerPayouts.length,
+    platformCommissionPercent: platformCommissionPercent,
+    platformCommissionTotal: platformCommissionTotal,
+  });
 
   return ordersRepository.insertOrder(order);
 }

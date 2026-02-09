@@ -59,7 +59,7 @@ $me | ConvertTo-Json -Depth 10
 Write-Host "`n[4/6] ORDERS (LIST)" -ForegroundColor Cyan
 $orders = Invoke-RestMethod -Method Get -Uri "$baseUrl/orders" -Headers $headers
 
-# só considera pedidos com customer.email válido (sem quebrar se não existir)
+# só considera pedidos com customer.email válido
 $validOrders = @($orders) | Where-Object { (Get-CustomerEmail $_) }
 
 $sorted = $validOrders | Sort-Object { Parse-Date $_.updatedAt } -Descending
@@ -70,7 +70,9 @@ $lastUpdated = if ($orders_count -gt 0) { $sorted[0].updatedAt } else { "n/a" }
 Write-Host ("orders_count=" + $orders_count)
 Write-Host ("orders_lastUpdated=" + $lastUpdated)
 
-$sorted | Select-Object id, status, @{n="gross";e={$_.totals.gross}}, @{n="customer";e={ Get-CustomerEmail $_ }} | Format-Table -AutoSize
+$sorted |
+  Select-Object id, status, @{n="gross";e={$_.totals.gross}}, @{n="customer";e={ Get-CustomerEmail $_ }} |
+  Format-Table -AutoSize
 
 # 5) ORDERS (GET BY ID)
 Write-Host "`n[5/6] ORDERS (GET BY ID)" -ForegroundColor Cyan
@@ -89,9 +91,25 @@ if ($testingId) {
 Write-Host "`n[6/6] ORDERS (CREATE + GET)" -ForegroundColor Cyan
 
 $createBody = '{"items":[{"serviceId":1,"quantity":1}]}'
-$created = Invoke-RestMethod -Method Post -Uri "$baseUrl/orders" -Headers $headers -ContentType "application/json" -Body $createBody
+$created = Invoke-RestMethod `
+  -Method Post `
+  -Uri "$baseUrl/orders" `
+  -Headers $headers `
+  -ContentType "application/json" `
+  -Body $createBody
 
-Write-Host ("CREATED_ID=" + $created.id)
+Assert-True ($created -and $created.id) "create must return created.id"
+
+Write-Host ("CREATED_ID=" + $created.id) -ForegroundColor Green
 $created | ConvertTo-Json -Depth 25
+
+# 6b) GET do pedido recém-criado
+Write-Host "`n[6b] ORDERS (GET CREATED BY ID)" -ForegroundColor Cyan
+$createdById = Invoke-RestMethod `
+  -Method Get `
+  -Uri "$baseUrl/orders/$($created.id)" `
+  -Headers $headers
+
+$createdById | ConvertTo-Json -Depth 25
 
 Write-Host "`nDONE OK" -ForegroundColor Green
