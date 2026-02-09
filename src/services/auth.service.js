@@ -11,6 +11,13 @@ function isProdLike() {
   return env === 'production';
 }
 
+function mustRequireJwtSecret() {
+  if (isProdLike()) return true;
+
+  const requireSecret = (process.env.JWT_REQUIRE_SECRET || '').trim().toLowerCase();
+  return requireSecret === '1' || requireSecret === 'true';
+}
+
 function getJwtSecretOrThrow() {
   const secret = process.env.JWT_SECRET;
 
@@ -18,8 +25,8 @@ function getJwtSecretOrThrow() {
     return secret;
   }
 
-  if (isProdLike()) {
-    throw new Error('JWT_SECRET is required in production and must be at least 16 characters.');
+  if (mustRequireJwtSecret()) {
+    throw new Error('JWT_SECRET is required and must be at least 16 characters.');
   }
 
   const allowFallback = (process.env.TURISTEI_ALLOW_JWT_FALLBACK || '').toLowerCase() === 'true';
@@ -110,7 +117,7 @@ function signToken({ userId, email, role }, opts = {}) {
     issuer: ISSUER,
     audience: AUDIENCE,
     subject: String(userId),
-    expiresIn
+    expiresIn,
   });
 }
 
@@ -118,7 +125,7 @@ function verifyToken(token) {
   const secret = getJwtSecretOrThrow();
   return jwt.verify(token, secret, {
     issuer: ISSUER,
-    audience: AUDIENCE
+    audience: AUDIENCE,
   });
 }
 
@@ -150,5 +157,5 @@ module.exports = {
   AUDIENCE,
   signToken,
   verifyToken,
-  login
+  login,
 };
