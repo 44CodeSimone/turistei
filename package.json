@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node src/index.js",
     "start:dev": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"$env:NODE_ENV='development'; if (-not $env:JWT_SECRET) { $env:JWT_SECRET='TURISTEI_DEV_SECRET_2026__troque_isto_agora'; Write-Host 'WARN: JWT_SECRET nao definido. Usando fallback DEV (troque isso).' -ForegroundColor Yellow }; node src/index.js\"",
+    "start:prod": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"$env:NODE_ENV='production'; if (-not $env:JWT_SECRET) { Write-Error 'JWT_SECRET é obrigatório em produção.'; exit 1 }; node src/index.js\"",
     "test:api": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\tools\\test-api.ps1",
     "test:ownership": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\tools\\test-ownership.ps1",
     "test:lifecycle": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\tools\\test-lifecycle.ps1",
