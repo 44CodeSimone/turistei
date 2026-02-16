@@ -1,103 +1,44 @@
 ﻿# Turistei API
 
-API backend do projeto **Turistei**, um marketplace de turismo multi-fornecedor,
-desenvolvido com foco em arquitetura limpa, segurança e regras de negócio reais.
+API do projeto **Turistei** — marketplace de turismo multi-fornecedor com
+financeiro por item, comissão dinâmica e repasses isolados por prestador.
+
+Status atual: **CHECKPOINT FECHADO** (testes 100% verdes).
 
 ---
 
-## 📌 Status do Projeto
-
-✅ API estável  
-✅ Ciclo de vida de pedidos completo  
-✅ Controle de ownership (usuário x admin)  
-✅ Testes automatizados passando  
-✅ Persistência desacoplada (file repository)  
+## Requisitos
+- Node.js 18+
+- PowerShell (Windows)
+- Porta local: **3000**
 
 ---
 
-## 🏗️ Arquitetura
-
-Arquitetura em camadas, seguindo padrão enterprise:
-
-```
-routes → controllers → services → repositories → storage
-```
-
-Regras:
-- nenhuma lógica fora da camada correta
-- services não conhecem HTTP
-- repositories isolam persistência
-- fácil troca futura para banco real (ex: Supabase)
+## Estrutura
+- `src/` — código da API (camadas: routes → controllers → services → repositories)
+- `tools/` — scripts de teste e utilidades
+- `docs/` — documentação (OpenAPI, ERP mínimo)
+- `backups/` — backups automáticos do `pedido.json`
+- `pedido.json` — persistência local (DEV)
 
 ---
 
-## 🔐 Autenticação
+## Variáveis de Ambiente
+Arquivo: `.env`
 
-- JWT (JSON Web Token)
-- Middleware `requireAuth`
-- Perfis suportados:
-  - admin
-  - user comum
+Obrigatórias em **produção**:
+- `JWT_SECRET` — **OBRIGATÓRIA** (sem fallback)
 
----
+Opcionais:
+- `TURISTEI_PLATFORM_COMMISSION_PERCENT` — percentual de comissão da plataforma
+- `TURISTEI_BACKUP_KEEP` — quantidade de backups mantidos (padrão: 30)
 
-## 📦 Funcionalidades Implementadas
-
-### Pedidos (Orders)
-- Criar pedido
-- Listar pedidos
-- Buscar pedido por ID
-- Ciclo de vida completo:
-  - CREATED
-  - PAID
-  - CONFIRMED
-  - COMPLETED
-  - CANCELLED
-- Validação de transições inválidas (HTTP 409)
-
-### Ownership
-- Usuário vê apenas seus pedidos
-- Admin vê todos os pedidos
+> ⚠️ Nunca commitar `.env`.
 
 ---
 
-## 🧪 Testes Automatizados
+## Rodar em Desenvolvimento
+Usa fallback de `JWT_SECRET` **apenas em DEV**.
 
-Executar todos os testes:
-
-```bash
-npm run test:all
-```
-
-Testes incluídos:
-- API básica
-- Ownership
-- Lifecycle de pedidos
-- Transições inválidas
-
----
-
-## ▶️ Executar o Projeto
-
-### Instalar dependências
-```bash
-npm install
-```
-
-### Rodar API
-```bash
-npm start
-```
-
-API disponível em:
-```
-http://localhost:3000
-```
-
----
-
-## 🗂️ Observações
-
-- Persistência atual em `pedido.json`
-- Estrutura preparada para evolução futura
-- Projeto em fase de backend consolidado
+```powershell
+npm run start:dev
