@@ -51,7 +51,7 @@ Arquivo: `.env`
 
 ### Obrigatórias em produção
 - `JWT_SECRET` — **OBRIGATÓRIA**  
-  > A aplicação **não sobe** em modo produção sem esta variável.
+  A aplicação não sobe em modo produção sem esta variável.
 
 ### Opcionais
 - `TURISTEI_PLATFORM_COMMISSION_PERCENT`  
@@ -60,7 +60,7 @@ Arquivo: `.env`
 - `TURISTEI_BACKUP_KEEP`  
   Quantidade de backups mantidos (padrão: 30)
 
-> ⚠️ Nunca commitar o arquivo `.env`.
+Nota: nunca commitar o arquivo `.env`.
 
 ---
 
@@ -68,5 +68,38 @@ Arquivo: `.env`
 
 Em desenvolvimento, é permitido fallback controlado de `JWT_SECRET`.
 
-```powershell
-npm run start:dev
+    npm run start:dev
+
+---
+
+## Rodar Testes
+
+Importante: os testes fazem chamadas HTTP em `http://localhost:3000`.  
+O servidor deve estar rodando antes de executar os testes.
+
+Fluxo correto:
+1. Subir o servidor
+2. Executar os testes
+3. Parar o servidor ao final (estado limpo)
+
+    npm run test:all
+
+---
+
+## Produção (Hardening)
+
+Em modo produção (ou com `JWT_REQUIRE_SECRET=1`), `JWT_SECRET` é obrigatório.
+
+    npm run start:prod
+
+---
+
+## Estado do Projeto
+
+- Arquitetura em camadas respeitada
+- Marketplace multi-fornecedor validado
+- Financeiro por item auditável
+- Lifecycle completo testado
+- Ownership isolado validado
+- Backups automáticos ativos
+- Checkpoint técnico fechado

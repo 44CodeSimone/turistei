@@ -1,60 +1,49 @@
 'use strict';
 
+const { getSupabaseClient } = require('../config/supabase.client');
+
 /**
- * Supabase Orders Repository (placeholder)
+ * Supabase Orders Repository
  *
- * Future implementation for real DB persistence.
- * Keeps the same interface as the file repository.
+ * Implementação inicial:
+ * - SOMENTE readAllOrders
+ * - Demais métodos permanecem como "not configured"
  *
- * Rules:
- * - Must not be used unless TURISTEI_USE_SUPABASE === "true"
- * - When implementing, replace throws with real Supabase calls
+ * Fonte de dados esperada:
+ * - View ou tabela: orders
+ *   (ajustável depois; não supor joins agora)
  */
 
-function notImplemented(method) {
-  const err = new Error(`[orders.supabase.repository] NOT_IMPLEMENTED: ${method}`);
-  err.code = 'REPO_NOT_IMPLEMENTED';
-  err.repo = 'supabase';
-  err.method = method;
-  return err;
+async function readAllOrders() {
+  const supabase = getSupabaseClient();
+
+  const { data, error } = await supabase
+    .from('orders')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    const err = new Error(
+      `[orders.supabase.repository] readAllOrders failed: ${error.message}`
+    );
+    err.code = 'SUPABASE_READ_ALL_ORDERS_FAILED';
+    throw err;
+  }
+
+  return data || [];
 }
 
-/**
- * Compat with file repo:
- * - readAllOrders({ user })
- */
-function readAllOrders() {
-  throw notImplemented('readAllOrders');
-}
-
-/**
- * Compat with file repo:
- * - findOrderById("ord_...")
- * - findOrderById({ id, user })
- */
-function findOrderById() {
-  throw notImplemented('findOrderById');
-}
-
-/**
- * Compat with file repo:
- * - insertOrder(order)
- */
-function insertOrder() {
-  throw notImplemented('insertOrder');
-}
-
-/**
- * Compat with file repo:
- * - updateOrderById({ id, order, user })
- */
-function updateOrderById() {
-  throw notImplemented('updateOrderById');
+function notConfigured(method) {
+  const err = new Error(
+    `[orders.supabase.repository] ${method} not configured. Supabase integration is not enabled in this phase step.`
+  );
+  err.code = 'SUPABASE_REPO_NOT_CONFIGURED';
+  throw err;
 }
 
 module.exports = {
   readAllOrders,
-  findOrderById,
-  insertOrder,
-  updateOrderById,
+  findOrderById: () => notConfigured('findOrderById'),
+  insertOrder: () => notConfigured('insertOrder'),
+  updateOrderById: () => notConfigured('updateOrderById'),
 };
