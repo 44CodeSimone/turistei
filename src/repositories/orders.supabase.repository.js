@@ -9,16 +9,15 @@ const { getSupabaseClient } = require('../config/supabase.client');
  * - SOMENTE readAllOrders
  * - Demais métodos permanecem como "not configured"
  *
- * Fonte de dados esperada:
- * - View ou tabela: orders
- *   (ajustável depois; não supor joins agora)
+ * Fonte de dados real:
+ * - Tabela: public.pedidos
  */
 
 async function readAllOrders() {
   const supabase = getSupabaseClient();
 
   const { data, error } = await supabase
-    .from('orders')
+    .from('pedidos')
     .select('*')
     .order('created_at', { ascending: false });
 
