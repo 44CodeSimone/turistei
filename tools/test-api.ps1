@@ -87,14 +87,6 @@ if ($testingId) {
   $orderById | ConvertTo-Json -Depth 25
 }
 
-# ✅ FASE 2 (Supabase): CREATE ainda não está implementado.
-# Se TURISTEI_ORDERS_REPOSITORY=supabase, finaliza aqui com sucesso.
-if ($env:TURISTEI_ORDERS_REPOSITORY -and $env:TURISTEI_ORDERS_REPOSITORY.ToLower() -eq "supabase") {
-  Write-Host "`n[6/6] ORDERS (CREATE + GET) - SKIPPED (Supabase repo: insertOrder not implemented yet)" -ForegroundColor Yellow
-  Write-Host "`nDONE OK" -ForegroundColor Green
-  exit 0
-}
-
 # 6) ORDERS (CREATE + GET)
 Write-Host "`n[6/6] ORDERS (CREATE + GET)" -ForegroundColor Cyan
 
